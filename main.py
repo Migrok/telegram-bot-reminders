@@ -50,6 +50,7 @@ def write_new_remind(message):
 def write_new_remind_time(message):
     bot.send_message(message.chat.id, 'Введите время')
 
+
 def check_reminder_time(reminders):
     pass
 
