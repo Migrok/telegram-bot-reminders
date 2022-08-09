@@ -1,9 +1,9 @@
 import telebot
-from  telebot import types
+import config
+import time
+from telebot import types
 
-bot_api_token = open('bot_api_token.txt', 'r')
-bot = telebot.TeleBot(bot_api_token.read())
-bot_api_token.close()
+bot = telebot.TeleBot(config.token)
 
 
 @bot.message_handler(commands=['start'])
@@ -13,24 +13,45 @@ def start(message):
            f'Напоминания могу присылать двумя способами:\n' \
            f'<b>- один раз в определённую дату и время\n' \
            f'- задаваемое количество раз с определённой периодичностью</b>'
-
-    markup = types.InlineKeyboardMarkup(row_width=2)
-    menu_button = types.InlineKeyboardButton('Меню', callback_data='menu')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    menu_button = types.KeyboardButton('/menu')
     markup.add(menu_button)
     bot.send_message(message.chat.id, mess, parse_mode='html', reply_markup=markup)
 
 
 @bot.message_handler(commands=['menu'])
 def menu(message):
-    mess = f'<b>Выбери действие</b>'
-    bot.send_message(message.chat.id, mess, parse_mode='html')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    menu_button = types.KeyboardButton('/new_remind')
+    markup.add(menu_button)
+    bot.send_message(message.chat.id, f'<b>Выбери действие</b>', parse_mode='html', reply_markup=markup)
 
 
-@bot.callback_query_handler(func=lambda call:True)
-def callback_inline(call):
-    if call.message:
-        if call.data == 'menu':
-            bot.send_message(call.message.chat.id, '/menu')
+@bot.message_handler(commands=['new_remind'])
+def new_remind(message):
+    if not config.writing_new_remind:
+        config.writing_new_remind = not config.writing_new_remind
+    bot.send_message(message.chat.id, 'Введи своё напоминание', parse_mode='html')
+    bot.register_next_step_handler(message, write_new_remind)
+
+
+@bot.message_handler(commands=None)
+def write_new_remind(message):
+    if config.writing_new_remind :
+        user_id = message.from_user.id
+        remind_text = message.text
+        config.test_reminders[user_id] = [remind_text]
+        bot.register_next_step_handler(message, write_new_remind_time)
+    else:
+        bot.send_message(message.chat.id, 'Выберите в меню \"Новое напоминание\"')
+
+
+@bot.message_handler(commands=None)
+def write_new_remind_time(message):
+    bot.send_message(message.chat.id, 'Введите время')
+
+def check_reminder_time(reminders):
+    pass
 
 
 if __name__ == '__main__':
