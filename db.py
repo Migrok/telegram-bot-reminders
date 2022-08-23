@@ -36,6 +36,13 @@ def add_new_remind_in_db(new_remind):
     session.commit()
 
 
+def update_remind_datetime_and_count_in_db(reminder):
+    session.query(Reminders)\
+        .filter(Reminders.remind_id == reminder.remind_id)\
+        .update({'remind_datetime': reminder.remind_datetime, 'remind_count': reminder.remind_count})
+    session.commit()
+
+
 def get_reminders_datetime():
     reminders_datetime_list = []
     for item in session.query(Reminders):
@@ -44,18 +51,17 @@ def get_reminders_datetime():
 
 
 def get_entries_by_datetime(remind_datetime_now):
-    remind_entry = []
+    remind_entries = []
     for item in session.query(Reminders).filter(Reminders.remind_datetime == remind_datetime_now):
-        remind_entry.append(item.remind_id)
-        remind_entry.append(item.user_id)
-        remind_entry.append(item.remind)
-        remind_entry.append(item.remind_datetime)
-    return remind_entry
+        remind_entries.append(item.remind_id)
+        remind_entries.append(item.user_id)
+        remind_entries.append(item.remind)
+        remind_entries.append(item.remind_datetime)
+        remind_entries.append(item.remind_count)
+        remind_entries.append(item.remind_delay)
+    return remind_entries
 
 
 def delete_remind(reminder_id):
     session.query(Reminders).filter_by(remind_id=reminder_id).delete()
     session.commit()
-
-
-delete_remind(2)
