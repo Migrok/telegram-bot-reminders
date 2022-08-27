@@ -111,6 +111,27 @@ def repeated_remind_get_delay(message):
         pass
 
 
+@bot.message_handler(func=lambda message: message.text == 'Проверить напоминания')
+def check_reminders(message):
+    reminders = db.get_entries_by_user_id(message.from_user.id)
+    reminders_for_message = f''
+    for reminder in reminders:
+        reminders_for_message += f'{str(reminder[0])}) '
+        reminders_for_message += f'Напоминание: {reminder[3]}|'
+        reminders_for_message += f'Дата: {str(reminder[4].day)}.{str(reminder[4].month)}.{str(reminder[4].year)}|'
+        reminders_for_message += f'Время: {str(reminder[4].hour)}:{str(reminder[4].minute)}'
+        if reminder[5] != -1:
+            if reminder[5] <= -2:
+                reminders_for_message += f'\n<b>Работает до отключения</b> c интервалом <b>{reminder[6]}</b>'
+            else:
+                reminders_for_message += f'\nОсталось <b>{reminder[5]}</b> напоминания c интервалом <b>{reminder[6]}</b>'
+        reminders_for_message += f'\n\n'
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    menu_button = types.KeyboardButton('Меню')
+    markup.add(menu_button)
+    bot.send_message(message.chat.id, reminders_for_message, parse_mode='html', reply_markup=markup)
+
+
 def write_new_remind_text(message):
     users_reminders[message.from_user.id].append(Remind(message.from_user.id, message.text))
     write_new_remind_date(message)

@@ -62,6 +62,25 @@ def get_entries_by_datetime(remind_datetime_now):
     return remind_entries
 
 
+def get_entries_by_user_id(user_id):
+    remind_entries = []
+    user_reminders = []
+    entry_number = 0
+    for entry in session.query(Reminders).filter(Reminders.user_id == user_id):
+        user_reminders.append(entry)
+    for item in user_reminders:
+        remind_entries.append(list())
+        remind_entries[entry_number].append(entry_number+1)
+        remind_entries[entry_number].append(item.remind_id)
+        remind_entries[entry_number].append(item.user_id)
+        remind_entries[entry_number].append(item.remind)
+        remind_entries[entry_number].append(item.remind_datetime)
+        remind_entries[entry_number].append(item.remind_count)
+        remind_entries[entry_number].append(item.remind_delay)
+        entry_number += 1
+    return remind_entries
+
+
 def delete_remind(reminder_id):
     session.query(Reminders).filter_by(remind_id=reminder_id).delete()
     session.commit()
