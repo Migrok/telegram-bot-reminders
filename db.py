@@ -36,13 +36,6 @@ def add_new_remind_in_db(new_remind):
     session.commit()
 
 
-def update_remind_datetime_and_count_in_db(reminder):
-    session.query(Reminders)\
-        .filter(Reminders.remind_id == reminder.remind_id)\
-        .update({'remind_datetime': reminder.remind_datetime, 'remind_count': reminder.remind_count})
-    session.commit()
-
-
 def get_reminders_datetime():
     reminders_datetime_list = []
     for item in session.query(Reminders):
@@ -79,6 +72,63 @@ def get_entries_by_user_id(user_id):
         remind_entries[entry_number].append(item.remind_delay)
         entry_number += 1
     return remind_entries
+
+
+def get_numbered_remind_id_by_user_id(user_id):
+    dict_number_id_reminder_id = {}
+    number_id = '1'
+    for entry in session.query(Reminders).filter(Reminders.user_id == user_id):
+        dict_number_id_reminder_id[number_id] = entry.remind_id
+        number_id = str(int(number_id) + 1)
+    return dict_number_id_reminder_id
+
+
+def get_reminder_entry_by_remind_id(remind_id):
+    reminder_entry = session.query(Reminders).filter(Reminders.remind_id == remind_id)
+    reminder_list = []
+    for item in reminder_entry:
+        reminder_list.append(item.remind_id)
+        reminder_list.append(item.user_id)
+        reminder_list.append(item.remind)
+        reminder_list.append(item.remind_datetime)
+        reminder_list.append(item.remind_count)
+        reminder_list.append(item.remind_delay)
+    return reminder_list
+
+
+def update_remind_datetime_and_count_in_db(reminder):
+    session.query(Reminders)\
+        .filter(Reminders.remind_id == reminder.remind_id)\
+        .update({'remind_datetime': reminder.remind_datetime, 'remind_count': reminder.remind_count})
+    session.commit()
+
+
+def update_remind_text(reminder):
+    session.query(Reminders) \
+        .filter(Reminders.remind_id == reminder.remind_id) \
+        .update({'remind': reminder.remind})
+    session.commit()
+
+
+def update_remind_datetime(reminder):
+    session.query(Reminders) \
+        .filter(Reminders.remind_id == reminder.remind_id) \
+        .update({'remind_datetime': reminder.remind_datetime})
+    session.commit()
+
+
+def update_remind_count(reminder):
+    session.query(Reminders) \
+        .filter(Reminders.remind_id == reminder.remind_id) \
+        .update({'remind_count': reminder.remind_count})
+    session.commit()
+
+
+def update_remind_delay(reminder):
+    session.query(Reminders) \
+        .filter(Reminders.remind_id == reminder.remind_id) \
+        .update({'remind_delay': reminder.remind_delay})
+    session.commit()
 
 
 def delete_remind(reminder_id):
