@@ -464,7 +464,7 @@ def check_reminders_time():
                                   remind=reminder_entry[2], remind_datetime=reminder_entry[3],
                                   remind_count=reminder_entry[4], remind_delay=reminder_entry[5])
                 send_reminder(reminder)
-        t.sleep(55)
+        t.sleep(60)
 
 
 if __name__ == '__main__':
