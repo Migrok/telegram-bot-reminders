@@ -138,6 +138,17 @@ def change_reminder_choice_reminder(message):
     bot.register_next_step_handler(message, change_reminder_choice)
 
 
+@bot.message_handler(func=lambda message: message.text == 'Удалить напоминание')
+def delete_reminder(message):
+    reminders_info_for_message = get_info_about_reminders_by_user_id(message)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    menu_button = types.KeyboardButton('Меню')
+    markup.add(menu_button)
+    bot.send_message(message.chat.id, reminders_info_for_message, parse_mode='html', reply_markup=markup)
+    bot.send_message(message.chat.id, 'Введите номер напоминания')
+    bot.register_next_step_handler(message, reminder_deleted)
+
+
 @bot.callback_query_handler(func=DetailedTelegramCalendar.func())
 def cal(c):
     result, key, step = DetailedTelegramCalendar().process(c.data)
@@ -261,12 +272,12 @@ def repeated_remind_set_count(message):
         except KeyError:
             users_change_reminders[message.from_user.id].set_remind_count(-2)
             change_count(message)
-    elif int(message.text) <= 0:
-        bot.send_message(message.chat.id, f'Количество напоминаний дожно быть строго больше 0\n\n'
-                                          f'Выберите или введите количество напоминаний')
-        bot.register_next_step_handler(message, repeated_remind_set_count)
     elif re.findall('\D', message.text):
         bot.send_message(message.chat.id, f'Количество напоминаний дожно содержать только цифры\n\n'
+                                          f'Выберите или введите количество напоминаний')
+        bot.register_next_step_handler(message, repeated_remind_set_count)
+    elif int(message.text) <= 0:
+        bot.send_message(message.chat.id, f'Количество напоминаний дожно быть строго больше 0\n\n'
                                           f'Выберите или введите количество напоминаний')
         bot.register_next_step_handler(message, repeated_remind_set_count)
     else:
@@ -416,10 +427,30 @@ def change_delay(message):
 
 
 def reminder_changed(message):
+    del users_change_reminders[message.from_user.id]
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     menu_button = types.KeyboardButton('Меню')
     markup.add(menu_button)
     bot.send_message(message.chat.id, 'Напоминание изменино', reply_markup=markup)
+
+
+def reminder_deleted(message):
+    reminders_id = db.get_numbered_remind_id_by_user_id(message.from_user.id)
+    if not re.findall('\D', message.text):
+        try:
+            db.delete_remind(reminders_id[message.text])
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            menu_button = types.KeyboardButton('Меню')
+            markup.add(menu_button)
+            bot.send_message(message.chat.id, 'Напоминание удалено', reply_markup=markup)
+        except KeyError:
+            bot.send_message(message.chat.id, f'Введен некоректный номер напоминания\n\n'
+                                              f'Введите номер напоминания')
+            bot.register_next_step_handler(message, reminder_deleted)
+    else:
+        bot.send_message(message.chat.id, f'Введено некоректное значение\n\n'
+                                          f'Введите номер напоминания')
+        bot.register_next_step_handler(message, reminder_deleted)
 
 
 def check_reminders_time():
